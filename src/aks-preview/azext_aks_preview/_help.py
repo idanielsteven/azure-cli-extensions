@@ -287,7 +287,7 @@ helps['aks create'] = f"""
           short-summary: The ID of a PPG.
         - name: --os-sku
           type: string
-          short-summary: The os-sku of the agent node pool. Ubuntu, Ubuntu2204, Ubuntu2404, CBLMariner, AzureLinux, AzureLinux3, AzureLinuxOSGuard, AzureLinux3OSGuard, AzureContainerLinux, or Flatcar when os-type is Linux, default is Ubuntu if not set; Windows2019, Windows2022, Windows2025, or WindowsAnnual when os-type is Windows, the current default is Windows2022 if not set.
+          short-summary: The os-sku of the agent node pool. Ubuntu, Ubuntu2204, Ubuntu2404, Ubuntu2604, CBLMariner, AzureLinux, AzureLinux3, AzureLinuxOSGuard, AzureLinux3OSGuard, AzureContainerLinux, or Flatcar when os-type is Linux, default is Ubuntu if not set; Windows2019, Windows2022, Windows2025, or WindowsAnnual when os-type is Windows, the current default is Windows2022 if not set.
         - name: --enable-fips-image
           type: bool
           short-summary: Use FIPS-enabled OS on agent nodes.
@@ -630,21 +630,27 @@ helps['aks create'] = f"""
         - name: --enable-opentelemetry-metrics
           type: bool
           short-summary: Enable OpenTelemetry metrics collection. Requires Azure Monitor metrics to be enabled.
-        - name: --opentelemetry-metrics-port
+        - name: --opentelemetry-metrics-port-http
           type: int
-          short-summary: Port for OpenTelemetry metrics collection (default port will be used if not specified)
+          short-summary: HTTP/protobuf port for OpenTelemetry metrics collection (default port will be used if not specified)
+        - name: --opentelemetry-metrics-port-grpc
+          type: int
+          short-summary: gRPC port for OpenTelemetry metrics collection (default port will be used if not specified)
         - name: --disable-opentelemetry-metrics
           type: bool
           short-summary: Disable OpenTelemetry metrics collection
-        - name: --enable-opentelemetry-logs
+        - name: --enable-opentelemetry-logs-traces
           type: bool
-          short-summary: Enable OpenTelemetry logs collection. Requires Azure Monitor logs to be enabled.
-        - name: --opentelemetry-logs-port
+          short-summary: Enable OpenTelemetry logs and traces collection. Requires Azure Monitor logs to be enabled.
+        - name: --opentelemetry-logs-traces-port-http
           type: int
-          short-summary: Port for OpenTelemetry logs collection (default port will be used if not specified)
-        - name: --disable-opentelemetry-logs
+          short-summary: HTTP/protobuf port for OpenTelemetry logs and traces collection (default port will be used if not specified)
+        - name: --opentelemetry-logs-traces-port-grpc
+          type: int
+          short-summary: gRPC port for OpenTelemetry logs and traces collection (default port will be used if not specified)
+        - name: --disable-opentelemetry-logs-traces
           type: bool
-          short-summary: Disable OpenTelemetry logs collection
+          short-summary: Disable OpenTelemetry logs and traces collection
         - name: --nodepool-labels
           type: string
           short-summary: The node labels for all node pools in this cluster. See https://aka.ms/node-labels for syntax of labels.
@@ -839,19 +845,21 @@ helps['aks create'] = f"""
         - name: Create a kubernetes cluster with Azure Service Mesh enabled.
           text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-azure-service-mesh
         - name: Create a kubernetes cluster with Azure Monitor Metrics enabled.
-          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-azuremonitormetrics
+          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-azure-monitor-metrics
         - name: Create a kubernetes cluster with Azure Monitor App Monitoring enabled
           text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-azure-monitor-app-monitoring
         - name: Create a kubernetes cluster with OpenTelemetry metrics collection enabled
-          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --enable-azuremonitormetrics
-        - name: Create a kubernetes cluster with OpenTelemetry logs collection enabled
-          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs --enable-addons monitoring
+          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --enable-azure-monitor-metrics
+        - name: Create a kubernetes cluster with OpenTelemetry logs and traces collection enabled
+          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs-traces --enable-addons monitoring
         - name: Create a kubernetes cluster with Azure Monitor logs enabled (shorthand)
           text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-azure-monitor-logs
         - name: Create a kubernetes cluster with OpenTelemetry metrics on custom port
-          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --opentelemetry-metrics-port 8888 --enable-azuremonitormetrics
-        - name: Create a kubernetes cluster with OpenTelemetry logs on custom port
-          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs --opentelemetry-logs-port 4317 --enable-azure-monitor-logs
+          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --opentelemetry-metrics-port-http 8888 --enable-azure-monitor-metrics
+        - name: Create a kubernetes cluster with OpenTelemetry logs and traces on custom ports
+          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs-traces --opentelemetry-logs-traces-port-http 8080 --opentelemetry-logs-traces-port-grpc 8082 --enable-azure-monitor-logs
+        - name: Create a kubernetes cluster with OpenTelemetry metrics on custom HTTP and gRPC ports
+          text: az aks create -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --opentelemetry-metrics-port-http 8888 --opentelemetry-metrics-port-grpc 8889 --enable-azure-monitor-metrics
         - name: Create a kubernetes cluster with a nodepool having ip allocation mode set to "StaticBlock"
           text: az aks create -g MyResourceGroup -n MyManagedCluster --os-sku Ubuntu --max-pods MaxPodsPerNode --network-plugin azure --vnet-subnet-id /subscriptions/00000/resourceGroups/AnotherResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet/subnets/NodeSubnet --pod-subnet-id /subscriptions/00000/resourceGroups/AnotherResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet/subnets/PodSubnet --pod-ip-allocation-mode StaticBlock
         - name: Create a kubernetes cluster with a VirtualMachines nodepool
@@ -1398,21 +1406,27 @@ helps['aks update'] = """
         - name: --enable-opentelemetry-metrics
           type: bool
           short-summary: Enable OpenTelemetry metrics collection. Requires Azure Monitor metrics to be enabled.
-        - name: --opentelemetry-metrics-port
+        - name: --opentelemetry-metrics-port-http
           type: int
-          short-summary: Port for OpenTelemetry metrics collection (default port will be used if not specified)
+          short-summary: HTTP/protobuf port for OpenTelemetry metrics collection (default port will be used if not specified)
+        - name: --opentelemetry-metrics-port-grpc
+          type: int
+          short-summary: gRPC port for OpenTelemetry metrics collection (default port will be used if not specified)
         - name: --disable-opentelemetry-metrics
           type: bool
           short-summary: Disable OpenTelemetry metrics collection
-        - name: --enable-opentelemetry-logs
+        - name: --enable-opentelemetry-logs-traces
           type: bool
-          short-summary: Enable OpenTelemetry logs collection. Requires Azure Monitor logs to be enabled.
-        - name: --opentelemetry-logs-port
+          short-summary: Enable OpenTelemetry logs and traces collection. Requires Azure Monitor logs to be enabled.
+        - name: --opentelemetry-logs-traces-port-http
           type: int
-          short-summary: Port for OpenTelemetry logs collection (default port will be used if not specified)
-        - name: --disable-opentelemetry-logs
+          short-summary: HTTP/protobuf port for OpenTelemetry logs and traces collection (default port will be used if not specified)
+        - name: --opentelemetry-logs-traces-port-grpc
+          type: int
+          short-summary: gRPC port for OpenTelemetry logs and traces collection (default port will be used if not specified)
+        - name: --disable-opentelemetry-logs-traces
           type: bool
-          short-summary: Disable OpenTelemetry logs collection
+          short-summary: Disable OpenTelemetry logs and traces collection
         - name: --enable-private-cluster
           type: bool
           short-summary: Enable private cluster for apiserver vnet integration cluster.
@@ -1573,6 +1587,30 @@ helps['aks update'] = """
         - name: --disable-application-load-balancer
           type: bool
           short-summary: Disable Application Load Balancer (Application Gateway for Containers) addon.
+        - name: --enable-hosted-system
+          type: bool
+          short-summary: (Automatic SKU) Convert an existing Automatic cluster to use a Managed System Pool.
+          long-summary: |
+              Only valid for clusters with the Automatic SKU. Optionally provide the bring-your-own
+              VNet subnet trio (`--system-node-subnet-id`, `--node-subnet-id`, `--apiserver-subnet-id`)
+              to move the cluster onto an existing VNet at the same time. Supplying the full trio also
+              implies this flag.
+        - name: --system-node-subnet-id
+          type: string
+          short-summary: (Automatic SKU) The ID of a subnet in an existing VNet to be used by the Managed System Pool.
+          long-summary: |
+              Bring-your-own VNet for an Automatic cluster requires three subnets supplied together:
+              `--system-node-subnet-id` (this flag, for the Managed System Pool), `--node-subnet-id`
+              (for user node pools), and `--apiserver-subnet-id` (for the control plane API server).
+              All three subnets must belong to the same VNet.
+        - name: --node-subnet-id
+          type: string
+          short-summary: (Automatic SKU) The ID of a subnet in an existing VNet to be used by user node pools.
+          long-summary: |
+              Bring-your-own VNet for an Automatic cluster requires three subnets supplied together:
+              `--system-node-subnet-id` (for the Managed System Pool), `--node-subnet-id` (this flag,
+              for user node pools), and `--apiserver-subnet-id` (for the control plane API server).
+              All three subnets must belong to the same VNet.
     examples:
       - name: Reconcile the cluster back to its current state.
         text: az aks update -g MyResourceGroup -n MyManagedCluster
@@ -1654,16 +1692,22 @@ helps['aks update'] = """
         text: az aks update -g MyResourceGroup -n MyManagedCluster --disable-gateway-api
       - name: Enable OpenTelemetry metrics collection on an existing cluster
         text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics
-      - name: Enable OpenTelemetry logs collection on an existing cluster
-        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs
+      - name: Enable OpenTelemetry logs and traces collection on an existing cluster
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs-traces
       - name: Configure OpenTelemetry metrics with custom port
-        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --opentelemetry-metrics-port 8888
-      - name: Configure OpenTelemetry logs with custom port
-        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs --opentelemetry-logs-port 4317
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --opentelemetry-metrics-port-http 8888
+      - name: Configure OpenTelemetry logs and traces with custom ports
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-logs-traces --opentelemetry-logs-traces-port-http 8080 --opentelemetry-logs-traces-port-grpc 8082
+      - name: Configure OpenTelemetry metrics with custom HTTP and gRPC ports
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-opentelemetry-metrics --opentelemetry-metrics-port-http 8888 --opentelemetry-metrics-port-grpc 8889
       - name: Disable OpenTelemetry metrics collection on an existing cluster
         text: az aks update -g MyResourceGroup -n MyManagedCluster --disable-opentelemetry-metrics
-      - name: Disable OpenTelemetry logs collection on an existing cluster
-        text: az aks update -g MyResourceGroup -n MyManagedCluster --disable-opentelemetry-logs
+      - name: Disable OpenTelemetry logs and traces collection on an existing cluster
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --disable-opentelemetry-logs-traces
+      - name: Convert an existing Automatic cluster to use a Managed System Pool.
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-hosted-system
+      - name: Convert an existing Automatic cluster to use a Managed System Pool with a bring-your-own VNet.
+        text: az aks update -g MyResourceGroup -n MyManagedCluster --enable-hosted-system --system-node-subnet-id <systemNodeSubnetID> --node-subnet-id <nodeSubnetID> --apiserver-subnet-id <apiserverSubnetID>
 """
 
 helps['aks kollect'] = """
@@ -2362,6 +2406,14 @@ helps['aks nodepool list'] = """
     short-summary: List node pools in the managed Kubernetes cluster.
 """
 
+helps['aks nodepool get-bootstrap-data'] = """
+    type: command
+    short-summary: Get bootstrap data for a FlexNodes pool.
+    examples:
+        - name: Get bootstrap data for a FlexNodes pool
+          text: az aks nodepool get-bootstrap-data -g MyResourceGroup --cluster-name MyManagedCluster -n flexpool
+"""
+
 helps['aks nodepool add'] = """
     type: command
     short-summary: Add a node pool to the managed Kubernetes cluster.
@@ -2413,7 +2465,7 @@ helps['aks nodepool add'] = """
           short-summary: The OS Type. Linux or Windows. Windows not supported yet for "VirtualMachines" VM set type.
         - name: --os-sku
           type: string
-          short-summary: The os-sku of the agent node pool. Ubuntu, Ubuntu2204, Ubuntu2404, CBLMariner, AzureLinux, AzureLinux3, AzureLinuxOSGuard, AzureLinux3OSGuard, AzureContainerLinux, or Flatcar when os-type is Linux, default is Ubuntu if not set; Windows2019, Windows2022, Windows2025, or WindowsAnnual when os-type is Windows, the current default is Windows2022 if not set.
+          short-summary: The os-sku of the agent node pool. Ubuntu, Ubuntu2204, Ubuntu2404, Ubuntu2604, CBLMariner, AzureLinux, AzureLinux3, AzureLinuxOSGuard, AzureLinux3OSGuard, AzureContainerLinux, or Flatcar when os-type is Linux, default is Ubuntu if not set; Windows2019, Windows2022, Windows2025, or WindowsAnnual when os-type is Windows, the current default is Windows2022 if not set.
         - name: --enable-fips-image
           type: bool
           short-summary: Use FIPS-enabled OS on agent nodes.
@@ -2459,7 +2511,7 @@ helps['aks nodepool add'] = """
           short-summary: The mode for a node pool which defines a node pool's primary function. If set as "System", AKS prefers system pods scheduling to node pools with mode `System`. If set as "ManagedSystem", all other properties except name and mode will be reset and managed by AKS. Learn more at https://aka.ms/aks/nodepool/mode.
         - name: --vm-set-type
           type: string
-          short-summary: Agent pool vm set type. VirtualMachineScaleSets, AvailabilitySet or VirtualMachines(Preview).
+          short-summary: Agent pool vm set type. VirtualMachineScaleSets, AvailabilitySet, VirtualMachines(Preview) or FlexNodes(Preview).
         - name: --aks-custom-headers
           type: string
           short-summary: Send custom headers. When specified, format should be Key1=Value1,Key2=Value2
@@ -2615,6 +2667,8 @@ helps['aks nodepool add'] = """
           text: az aks nodepool add -g MyResourceGroup -n nodepool1 --cluster-name MyManagedCluster  --os-sku Ubuntu --pod-subnet-id /subscriptions/00000/resourceGroups/AnotherResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet/subnets/MySubnet --pod-ip-allocation-mode StaticBlock
         - name: Create a nodepool of type VirtualMachines
           text: az aks nodepool add -g MyResourceGroup -n nodepool1 --cluster-name MyManagedCluster --vm-set-type VirtualMachines --vm-sizes "Standard_D4s_v3,Standard_D8s_v3" --node-count 3
+        - name: Create a FlexNodes pool for customer-provided machines
+          text: az aks nodepool add -g MyResourceGroup -n flexpool --cluster-name MyManagedCluster --vm-set-type FlexNodes --kubernetes-version 1.32
         - name: Create a nodepool with ManagedSystem mode
           text: az aks nodepool add -g MyResourceGroup -n managedsystem1 --cluster-name MyManagedCluster --mode ManagedSystem
         - name: Create a node pool with blue-green upgrade strategy and default parameters
@@ -3085,6 +3139,15 @@ helps['aks machine add'] = """
        - name: --kubernetes-version
          type: string
          short-summary: Version of Kubernetes to use for creating the machine, such as "1.7.12" or "1.8.7".
+       - name: --labels
+         type: string
+         short-summary: Node labels for a FlexNode machine.
+       - name: --node-taints
+         type: string
+         short-summary: Node taints for a FlexNode machine.
+       - name: --max-pods -m
+         type: int
+         short-summary: Maximum pods for a FlexNode machine.
        - name: --enable-fips-image
          type: bool
          short-summary: Switch to use FIPS-enabled OS on the machine.
@@ -3139,6 +3202,9 @@ helps['aks machine update'] = """
        - name: --node-taints
          type: string
          short-summary: The taints of the machine.
+       - name: --kubernetes-version
+         type: string
+         short-summary: Kubernetes version for a FlexNode machine. This option is not supported for regular machines.
 """
 
 helps['aks machine list'] = """
@@ -4763,6 +4829,75 @@ helps['aks loadbalancer show'] = """
 """
 
 helps['aks bastion'] = """
+    type: group
+    short-summary: Commands to manage or connect to Azure Bastion for a managed Kubernetes cluster.
+"""
+
+helps['aks bastion enable'] = """
+type: command
+short-summary: Enable managed Azure Bastion host for a managed Kubernetes cluster.
+parameters:
+  - name: --aks-custom-headers
+    type: string
+    short-summary: Send custom headers. When specified, format should be Key1=Value1,Key2=Value2
+  - name: --bastion-sku -s
+    type: string
+    short-summary: Specify the SKU of the managed Azure Bastion host.
+  - name: --bastion-public-ip
+    type: string
+    short-summary: The resource ID of an existing public IP address to be assigned to the managed Azure Bastion host.
+    long-summary: When not specified, a new public IP address will be created and assigned to the managed Azure Bastion host.
+  - name: --bastion-scale-units
+    type: int
+    short-summary: The number of scale units for the managed Azure Bastion host.
+examples:
+  - name: Enable managed Azure Bastion host for a managed Kubernetes cluster with default settings.
+    text: az aks bastion enable --name MyManagedCluster --resource-group MyResourceGroup
+    crafted: true
+  - name: Enable managed Azure Bastion host with premium sku and custom scale units.
+    text: az aks bastion enable --name MyManagedCluster --resource-group MyResourceGroup --bastion-sku premium --bastion-scale-units 7
+    crafted: true
+  - name: Enable managed Azure Bastion host with BYO public IP address.
+    text: az aks bastion enable --name MyManagedCluster --resource-group MyResourceGroup --bastion-public-ip /subscriptions/{subscription-id}/resourceGroups/MyResourceGroup/providers/Microsoft.Network/publicIPAddresses/MyPublicIP
+    crafted: true
+"""
+
+helps['aks bastion disable'] = """
+type: command
+short-summary: Disable managed Azure Bastion host for a managed Kubernetes cluster.
+parameters:
+  - name: --aks-custom-headers
+    type: string
+    short-summary: Send custom headers. When specified, format should be Key1=Value1,Key2=Value2
+examples:
+  - name: Disable managed Azure Bastion host for a managed Kubernetes cluster.
+    text: az aks bastion disable --name MyManagedCluster --resource-group MyResourceGroup
+    crafted: true
+"""
+
+helps['aks bastion update'] = """
+type: command
+short-summary: Update managed Azure Bastion host for a managed Kubernetes cluster.
+parameters:
+  - name: --aks-custom-headers
+    type: string
+    short-summary: Send custom headers. When specified, format should be Key1=Value1,Key2=Value2
+  - name: --bastion-sku -s
+    type: string
+    short-summary: Specify the SKU of the managed Azure Bastion host.
+  - name: --bastion-scale-units
+    type: int
+    short-summary: The number of scale units for the managed Azure Bastion host.
+examples:
+  - name: Upgrade managed Azure Bastion host to Premium SKU.
+    text: az aks bastion update --name MyManagedCluster --resource-group MyResourceGroup --bastion-sku premium
+    crafted: true
+  - name: Scale managed Azure Bastion host.
+    text: az aks bastion update --name MyManagedCluster --resource-group MyResourceGroup --bastion-scale-units 7
+    crafted: true
+"""
+
+helps['aks bastion tunnel'] = """
     type: command
     short-summary: Connect to a managed Kubernetes cluster using Azure Bastion.
     long-summary: The command will launch a subshell with the kubeconfig set to connect to the cluster via Bastion. Use exit or Ctrl-D (i.e. EOF) to exit the subshell.
@@ -4784,9 +4919,9 @@ helps['aks bastion'] = """
           long-summary: If specified, uses this kubeconfig file at its original location instead of fetching credentials from Azure.
     examples:
         - name: Connect to a managed Kubernetes cluster using Azure Bastion with custom port and admin credentials.
-          text: az aks bastion -g MyResourceGroup --name MyManagedCluster --bastion MyBastionResource --port 50001 --admin
+          text: az aks bastion tunnel -g MyResourceGroup --name MyManagedCluster --bastion MyBastionResource --port 50001 --admin
         - name: Connect using an existing kubeconfig file.
-          text: az aks bastion -g MyResourceGroup --name MyManagedCluster --kubeconfig-path ~/.kube/config
+          text: az aks bastion tunnel -g MyResourceGroup --name MyManagedCluster --kubeconfig-path ~/.kube/config
 """
 
 helps['aks identity-binding'] = """
